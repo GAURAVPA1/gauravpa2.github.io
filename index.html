@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pocket Arcade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eaf1fb;--ink:#1b1f3b;--panel:#fff;--panel2:#dbe6f7;--red:#e63946;--yel:#ffb703;--grn:#2a9d8f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141733;--ink:#f1f4ff;--panel:#1f2350;--panel2:#2a2f66}}
+:root[data-theme="dark"]{--bg:#141733;--ink:#f1f4ff;--panel:#1f2350;--panel2:#2a2f66}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "DM Sans",system-ui,sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:20px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.logo{font-family:Bungee,Impact,sans-serif;font-size:1.5rem;letter-spacing:.5px}
+.logo span{color:var(--red)}
+button{font:inherit;color:var(--ink);cursor:pointer}
+:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+.btn{background:var(--yel);border:3px solid var(--ink);border-radius:10px;padding:8px 16px;font-weight:700;box-shadow:4px 4px 0 var(--ink);transition:transform .08s,box-shadow .08s;color:#1b1f3b}
+.btn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+.btn.sm{padding:4px 12px;box-shadow:3px 3px 0 var(--ink);background:var(--panel)}
+.btn.sm:active{transform:translate(3px,3px)}
+.hero{display:grid;grid-template-columns:1fr 1.1fr;gap:32px;align-items:start;margin-top:28px}
+h1{font-family:Bungee,Impact,sans-serif;font-size:clamp(2.2rem,6vw,3.8rem);line-height:1.02;margin:0 0 16px;font-weight:400}
+.lead{max-width:44ch;margin:0 0 20px}
+.scores{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:24px}
+.score{background:var(--panel);border:3px solid var(--ink);border-radius:12px;padding:10px 12px}
+.score b{display:block;font-family:Bungee,Impact,sans-serif;font-size:1.4rem;font-weight:400}
+.score small{opacity:.75}
+.stage{background:var(--panel);border:3px solid var(--ink);border-radius:16px;box-shadow:8px 8px 0 var(--ink);padding:14px}
+.tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.tab{background:var(--panel2);border:3px solid var(--ink);border-radius:10px;padding:6px 14px;font-weight:700}
+.tab[aria-selected="true"]{background:var(--red);color:#fff}
+.bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;font-weight:600}
+#status{min-height:1.5em}
+canvas{display:block;width:100%;max-width:360px;aspect-ratio:1;margin:0 auto;border:3px solid var(--ink);border-radius:10px;background:var(--panel2);touch-action:none}
+.pad{display:grid;grid-template-columns:repeat(3,56px);gap:6px;justify-content:center;margin-top:12px}
+.pad .btn{padding:6px 0;font-size:1.2rem;box-shadow:3px 3px 0 var(--ink)}
+.pad .btn:active{transform:translate(3px,3px)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:360px;margin:0 auto}
+.card{aspect-ratio:1;font-size:2rem;background:var(--yel);border:3px solid var(--ink);border-radius:10px;box-shadow:3px 3px 0 var(--ink);color:transparent}
+.card.on{background:var(--panel2);color:inherit}
+.card.done{background:var(--grn);color:#fff;box-shadow:none}
+.react{display:grid;place-items:center;width:100%;max-width:360px;aspect-ratio:1;margin:0 auto;border:3px solid var(--ink);border-radius:10px;background:var(--red);color:#fff;font-family:Bungee,Impact,sans-serif;font-size:1.5rem;text-align:center;padding:16px;user-select:none}
+.react.go{background:var(--grn)}
+.react.wait{background:var(--ink)}
+footer{margin-top:36px;opacity:.7;font-size:.9rem}
+@media (max-width:820px){.hero{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="logo">Pocket <span>Arcade</span></div>
+  <button class="btn sm" id="theme" aria-label="Switch light and dark theme">Theme</button>
+</header>
+
+<main class="hero">
+  <section>
+    <h1>Pick a game. Beat your best.</h1>
+    <p class="lead">Three quick games that run right here. No downloads, no sign-up. Your best scores are saved in this browser.</p>
+    <div class="scores" aria-label="Your best scores">
+      <div class="score"><b id="bs">0</b><small>Snake: most apples</small></div>
+      <div class="score"><b id="bm">-</b><small>Memory: fewest moves</small></div>
+      <div class="score"><b id="br">-</b><small>Reaction: fastest ms</small></div>
+    </div>
+  </section>
+
+  <section class="stage" aria-label="Game stage">
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="t-snake" aria-selected="true">Snake</button>
+      <button class="tab" role="tab" id="t-mem" aria-selected="false">Memory</button>
+      <button class="tab" role="tab" id="t-react" aria-selected="false">Reaction</button>
+    </div>
+    <div class="bar"><span id="status" aria-live="polite"></span><button class="btn sm" id="start">Start</button></div>
+
+    <div id="p-snake">
+      <canvas id="cv" width="360" height="360" aria-label="Snake game board"></canvas>
+      <div class="pad">
+        <span></span><button class="btn" data-d="U" aria-label="Up">&#9650;</button><span></span>
+        <button class="btn" data-d="L" aria-label="Left">&#9664;</button><button class="btn" data-d="D" aria-label="Down">&#9660;</button><button class="btn" data-d="R" aria-label="Right">&#9654;</button>
+      </div>
+    </div>
+    <div id="p-mem" hidden><div class="grid" id="grid"></div></div>
+    <div id="p-react" hidden><button class="react" id="rbox" style="width:100%">Press Start</button></div>
+  </section>
+</main>
+
+<footer>Snake: arrow keys, WASD or the on-screen pad. Memory: match all 8 pairs. Reaction: click when the box turns green.</footer>
+</div>
+
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+function ld(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function sv(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+var best={s:+ld('pa_s')||0,m:+ld('pa_m')||0,r:+ld('pa_r')||0};
+function showBest(){$('bs').textContent=best.s;$('bm').textContent=best.m||'-';$('br').textContent=best.r||'-'}
+showBest();
+
+/* theme */
+$('theme').onclick=function(){var r=document.documentElement,d=r.getAttribute('data-theme');
+ var dark=d?d==='dark':matchMedia('(prefers-color-scheme:dark)').matches;r.setAttribute('data-theme',dark?'light':'dark');if(game==='snake')draw()};
+
+/* tabs */
+var game='snake',tabs={snake:'t-snake',mem:'t-mem',react:'t-react'},panels={snake:'p-snake',mem:'p-mem',react:'p-react'};
+var msg={snake:'Eat apples, avoid walls and yourself.',mem:'Flip two cards at a time.',react:'Wait for green.'};
+function pick(g){stopSnake();clearTimeout(rt);game=g;
+ for(var k in tabs){$(tabs[k]).setAttribute('aria-selected',k===g);$(panels[k]).hidden=k!==g}
+ $('status').textContent=msg[g];$('start').textContent='Start';if(g==='snake'){sInit()}if(g==='mem'){buildMem(true)}if(g==='react'){setR('Press Start','')}}
+for(var k in tabs)(function(g){$(tabs[g]).onclick=function(){pick(g)}})(k);
+$('start').onclick=function(){if(game==='snake')sStart();else if(game==='mem')buildMem(false);else rStart()};
+
+/* snake */
+var cv=$('cv'),cx=cv.getContext('2d'),N=18,S=20,sn,dir,nd,food,sc,tm,run=false;
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+function place(){do{food={x:Math.floor(Math.random()*N),y:Math.floor(Math.random()*N)}}while(sn.some(function(p){return p.x===food.x&&p.y===food.y}))}
+function sInit(){sn=[{x:9,y:9},{x:8,y:9},{x:7,y:9}];dir={x:1,y:0};nd=dir;sc=0;run=false;place();draw()}
+function draw(){cx.fillStyle=css('--panel2');cx.fillRect(0,0,360,360);
+ cx.fillStyle=css('--red');cx.beginPath();cx.arc(food.x*S+10,food.y*S+10,8,0,7);cx.fill();
+ sn.forEach(function(p,i){cx.fillStyle=i?css('--grn'):css('--ink');cx.fillRect(p.x*S+1,p.y*S+1,S-2,S-2)})}
+function stopSnake(){run=false;clearTimeout(tm)}
+function sStart(){stopSnake();sInit();run=true;$('start').textContent='Restart';$('status').textContent='Apples: 0';loop()}
+function loop(){if(!run)return;
+ dir=nd;var h={x:sn[0].x+dir.x,y:sn[0].y+dir.y};
+ if(h.x<0||h.y<0||h.x>=N||h.y>=N||sn.some(function(p){return p.x===h.x&&p.y===h.y})){
+  run=false;$('status').textContent='Game over. Apples: '+sc+'. Press Restart.';
+  if(sc>best.s){best.s=sc;sv('pa_s',sc);showBest()}return}
+ sn.unshift(h);
+ if(h.x===food.x&&h.y===food.y){sc++;$('status').textContent='Apples: '+sc;place()}else sn.pop();
+ draw();tm=setTimeout(loop,Math.max(60,130-sc*4))}
+function turn(d){var m={U:[0,-1],D:[0,1],L:[-1,0],R:[1,0]}[d];if(!m)return;
+ if(m[0]===-dir.x&&m[1]===-dir.y&&(dir.x||dir.y))return;nd={x:m[0],y:m[1]}}
+document.addEventListener('keydown',function(e){if(game!=='snake')return;
+ var m={ArrowUp:'U',w:'U',ArrowDown:'D',s:'D',ArrowLeft:'L',a:'L',ArrowRight:'R',d:'R'}[e.key];
+ if(m){e.preventDefault();if(!run&&sn&&sc===0&&$('start').textContent==='Start')sStart();turn(m)}});
+document.querySelectorAll('[data-d]').forEach(function(b){b.onclick=function(){if(!run&&$('start').textContent==='Start')sStart();turn(b.dataset.d)}});
+var sx,sy;cv.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
+cv.addEventListener('touchend',function(e){var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+ if(Math.max(Math.abs(dx),Math.abs(dy))<20)return;turn(Math.abs(dx)>Math.abs(dy)?(dx>0?'R':'L'):(dy>0?'D':'U'))});
+
+/* memory */
+var faces=['🚀','👾','🎲','🏆','🧩','🎯','⚡','🔮'],first=null,lock=false,moves=0,found=0;
+function buildMem(idle){var g=$('grid');g.innerHTML='';first=null;lock=false;moves=0;found=0;
+ var deck=faces.concat(faces).sort(function(){return Math.random()-.5});
+ deck.forEach(function(f){var b=document.createElement('button');b.className='card';b.textContent=f;b.setAttribute('aria-label','Hidden card');
+  b.onclick=function(){flip(b)};g.appendChild(b)});
+ if(!idle){$('status').textContent='Moves: 0';$('start').textContent='Restart'}}
+function flip(b){if(lock||b.classList.contains('on')||b.classList.contains('done'))return;
+ b.classList.add('on');
+ if(!first){first=b;return}
+ moves++;$('status').textContent='Moves: '+moves;lock=true;var a=first;first=null;
+ if(a.textContent===b.textContent){a.className=b.className='card done';found++;lock=false;
+  if(found===8){$('status').textContent='Done in '+moves+' moves.';if(!best.m||moves<best.m){best.m=moves;sv('pa_m',moves);showBest()}}}
+ else setTimeout(function(){a.classList.remove('on');b.classList.remove('on');lock=false},650)}
+
+/* reaction */
+var rt,rs=0,rstate=0,rb=$('rbox');
+function setR(t,c){rb.textContent=t;rb.className='react '+c}
+function rStart(){clearTimeout(rt);rstate=1;setR('Wait for green...','wait');$('start').textContent='Restart';
+ rt=setTimeout(function(){rstate=2;rs=performance.now();setR('Click now!','go')},1000+Math.random()*2500)}
+rb.onclick=function(){
+ if(rstate===1){clearTimeout(rt);rstate=0;setR('Too early. Press Start.','')}
+ else if(rstate===2){var ms=Math.round(performance.now()-rs);rstate=0;setR(ms+' ms','');
+  $('status').textContent=ms+' ms. Press Restart to try again.';if(!best.r||ms<best.r){best.r=ms;sv('pa_r',ms);showBest()}}}
+
+pick('snake');
+})();
+</script>
+</body>
+</html>
